@@ -1,0 +1,48 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CMake > Clean",
+            "type": "cmake",
+            "command": "clean",
+            "group": "build"
+        },
+        {
+            "label": "CMake > Build",
+            "type": "cmake",
+            "command": "build",
+            "group": "build"
+        },
+        {
+            "label": "CMake > Re-Build",
+            "type": "cmake",
+            "command": "cleanRebuild",
+            "group": "build"
+        },
+        {
+            "label": "App > Launch",
+            "group": "none",
+            "type": "process",
+            "linux": {
+                "command": "${input:app_exec_file}"
+            },
+            "windows": {
+                "command": "${input:app_exec_file}.exe",
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/build/bin"
+            },
+            "dependsOn": [
+                "CMake > Build"
+            ]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "app_exec_file",
+            "type": "promptString",
+            "description": "Application executable filename?",
+            "default": "OpenGLTest"
+        },
+    ],
+}

@@ -1,0 +1,30 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 4,
+        "minor": 1,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "default",
+            "generator": "MinGW Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": {
+                    "value": "${sourceDir}/mingw-toolchain.cmake",
+                    "type": "FILEPATH"
+                },
+                "MINGW_HOME": "$env{MINGW_HOME}",
+                "GLUT": "$env{USR_LIBS}/freeglut-3.6.0",
+                "GLEW": "$env{USR_LIBS}/glew-2.1.0",
+                "GLFW": "$env{USR_LIBS}/glfw-3.4"
+            },
+            "environment": {
+                "PATH": "C:/Users/Bee/Documents/CCPP/dev/mingw64/bin;$penv{PATH}",
+                "MINGW_HOME": "C:/Users/Bee/Documents/CCPP/dev/mingw64",
+                "USR_LIBS": "C:/Users/Bee/Documents/CCPP/dev/libs"
+            }
+        }
+    ]
+}
