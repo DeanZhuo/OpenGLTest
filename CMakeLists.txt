@@ -31,7 +31,13 @@ if (MINGW)
   include_directories(${OPENGL_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
 endif()
 
-add_executable(OpenGLTest src/main.cpp)
+add_executable(OpenGLTest
+    src/main.cpp
+)
+
+target_include_directories(OpenGLTest PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
 
 target_link_libraries(OpenGLTest
   ${OPENGL_LIBRARIES}
