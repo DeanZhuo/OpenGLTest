@@ -3,6 +3,8 @@
 #include <iostream>
 #include <cmath>
 #include "shader_s.h"
+#include <RadarGeometry.h>
+#include <RadarRenderer.h>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -65,7 +67,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    GLFWwindow *window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(800, 800, "LearnOpenGL", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -73,7 +75,10 @@ int main()
         return -1;
     }
     glfwMakeContextCurrent(window);
-    glViewport(0, 0, 800, 600);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glViewport(0, 0, 800, 800);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     GLenum err = glewInit();
@@ -106,53 +111,10 @@ int main()
 
     // build and compile our shader program
     // ------------------------------------
-    /* multi and uniform
-    unsigned int vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
-    unsigned int fragmentShaderYellow = compileShader(GL_FRAGMENT_SHADER, fragmentShaderYellowSource);
-    unsigned int fragmentShaderUniform = compileShader(GL_FRAGMENT_SHADER, fragmentShaderUniformSource);
-
-    // shader program Uniform
-    unsigned int shaderProgramUniform = glCreateProgram();
-    glAttachShader(shaderProgramUniform, vertexShader);
-    glAttachShader(shaderProgramUniform, fragmentShaderUniform);
-    glLinkProgram(shaderProgramUniform);
-    checkShaderProgramErrors(shaderProgramUniform);
-
-    // shader program yellow
-    unsigned int shaderProgramYellow = glCreateProgram();
-    glAttachShader(shaderProgramYellow, vertexShader);
-    glAttachShader(shaderProgramYellow, fragmentShaderYellow);
-    glLinkProgram(shaderProgramYellow);
-    checkShaderProgramErrors(shaderProgramYellow);
-
-    // remove unused shaders variables
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShaderUniform);
-    glDeleteShader(fragmentShaderYellow);
-    */
 
     Shader shaderPositionAndColor("../../shaders/positionColor.vert", "../../shaders/positionColor.frag");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
-    /* multi and uniform
-        unsigned int VBOs[2], VAOs[2];
-        glGenBuffers(2, VBOs);
-        glGenVertexArrays(2, VAOs);
-
-        // setup first triangle
-        glBindVertexArray(VAOs[0]);
-        glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(firstTriangle), firstTriangle, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0); // Vertex attributes stay the same
-        glEnableVertexAttribArray(0);
-
-        // setup second triangle
-        glBindVertexArray(VAOs[1]);
-        glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(secondTriangle), secondTriangle, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
-        glEnableVertexAttribArray(0); // because the vertex data is tightly packed we can also specify 0 as the vertex attribute's stride to let OpenGL figure it out
-    */
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -166,7 +128,13 @@ int main()
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    shaderPositionAndColor.use();
+    RadarGeometry geo(60, 0, 5);
+    RadarRenderer ringRenderer, radialRenderer, sweepRenderer;
+    auto ringverts = geo.generateRings(5);
+    ringRenderer.upload(ringverts);
+    auto radialverts = geo.generateRadials(12);
+    radialRenderer.upload(radialverts);
+    double lastTime = glfwGetTime();
 
     while (!glfwWindowShouldClose(window))
     {
@@ -179,24 +147,19 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // draw
-        /* multi and uniform
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glUseProgram(shaderProgramUniform); // activate before changing uniforms
-        float timeValue = glfwGetTime();
-        float greenValue = sin(timeValue) / 2.0f + 0.5f;
-        int vertexColorLocation = glGetUniformLocation(shaderProgramUniform, "ourColor");
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
-        glBindVertexArray(VAOs[0]);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glUseProgram(shaderProgramYellow);
-        glBindVertexArray(VAOs[1]);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        */
-
+        shaderPositionAndColor.use();
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        double now = glfwGetTime();
+        double dt = now - lastTime;
+        lastTime = now;
+        auto sweepVerts = geo.generateSweep(dt);
+        sweepRenderer.upload(sweepVerts);
+
+        ringRenderer.render(GL_LINE_STRIP);
+        radialRenderer.render(GL_LINES);
+        sweepRenderer.render(GL_TRIANGLE_FAN);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
@@ -204,12 +167,6 @@ int main()
     }
 
     // de-allocate all resources
-    /* multi and uniform
-    glDeleteVertexArrays(2, VAOs);
-    glDeleteBuffers(2, VBOs);
-    glDeleteProgram(shaderProgramUniform);
-    glDeleteProgram(shaderProgramYellow);
-    */
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
 
@@ -227,38 +184,3 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 }
-
-/*
-unsigned int compileShader(GLenum type, const char *source)
-{
-    unsigned int shader;
-    shader = glCreateShader(type);
-    glShaderSource(shader, 1, &source, NULL);
-    glCompileShader(shader);
-
-    // check for shader compile errors
-    int success;
-    char infoLog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-    }
-    return shader;
-}
-
-void checkShaderProgramErrors(unsigned int shaderProgram)
-{
-    int success;
-    char infoLog[512];
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-    }
-}
-*/

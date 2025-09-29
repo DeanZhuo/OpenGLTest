@@ -18,6 +18,7 @@ if(MINGW)
   endif()
 
   set(CMAKE_PREFIX_PATH "${MINGW_HOME};${GLUT};${GLEW};${GLFW}")
+  set(radar_DIR "C:/Users/Bee/Documents/CCPP/dev/libs/radar-1.0/lib/cmake/radar")
   set(GLUT_INCLUDE_DIR "${GLUT}/include")
 endif()
 
@@ -26,9 +27,10 @@ find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glfw3 3.4 REQUIRED)
+find_package(radar 1.0 REQUIRED)
 
 if (MINGW)
-  include_directories(${OPENGL_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
+  include_directories(${OPENGL_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${RADAR_INCLUDE_DIRS})
 endif()
 
 add_executable(OpenGLTest
@@ -43,6 +45,8 @@ target_link_libraries(OpenGLTest
   ${OPENGL_LIBRARIES}
   GLUT::GLUT
   GLEW::GLEW
+  radar::radar_core
+  radar::radar_opengl
   glfw
 )
 
