@@ -69,7 +69,15 @@
         "span": "cpp",
         "text_encoding": "cpp",
         "cinttypes": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "filesystem": "cpp",
+        "chrono": "cpp",
+        "forward_list": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp",
+        "ratio": "cpp",
+        "sstream": "cpp",
+        "codecvt": "cpp"
     },
     "cmake.generator": "MinGW Makefiles",
     "cmake.configureSettings": {

@@ -1,57 +1,31 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <filesystem>
 #include <cmath>
 #include "shader_s.h"
-#include <RadarGeometry.h>
-#include <RadarRenderer.h>
+#include "VBO.h"
+#include "VAO.h"
+#include "EBO.h"
+#include "stb_image.h"
+
+namespace fs = std::filesystem;
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
-unsigned int compileShader(GLenum type, const char *source);
-void checkShaderProgramErrors(unsigned int shaderProgram);
 
-float firstTriangle[] = {
-    -0.9f, -0.5f, 0.0f, // left
-    -0.0f, -0.5f, 0.0f, // right
-    -0.45f, 0.5f, 0.0f, // top
-};
-float secondTriangle[] = {
-    0.0f, -0.5f, 0.0f, // left
-    0.9f, -0.5f, 0.0f, // right
-    0.45f, 0.5f, 0.0f  // top
-};
 float vertices[] = {
-    // positions       // colors
-    0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right
-    -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
-    0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f    // top
+    // positions          // colors           // texture coords
+    0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,   // top right
+    0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // bottom right
+    -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+    -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f   // top left
 };
 
-const char *vertexShaderSource = R"(
-#version 330 core
-layout (location = 0) in vec3 aPos;
-void main() {
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-}
-)";
-
-const char *fragmentShaderYellowSource = R"(
-#version 330 core
-out vec4 FragColor;
-void main() {
-    FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);
-}
-)";
-
-const char *fragmentShaderUniformSource = R"(
-#version 330 core
-out vec4 FragColor;
-uniform vec4 ourColor;
-void main() {
-    FragColor = ourColor;
-}
-)";
+unsigned int indices[] = {
+    0, 1, 3, // first triangle
+    1, 2, 3  // second triangle
+};
 
 int main()
 {
@@ -106,60 +80,54 @@ int main()
             nullptr);
     }
 
-    // set clear color
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-    // build and compile our shader program
-    // ------------------------------------
-
-    Shader shaderPositionAndColor("../../shaders/positionColor.vert", "../../shaders/positionColor.frag");
+    Shader shaderPositionAndColor("../../shaders/offsetPosition.vert", "../../shaders/positionColor.frag");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-    // color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    VAO VAO1;
+    VAO1.Bind();
 
-    RadarGeometry geo(60, 0, 5);
-    RadarRenderer ringRenderer, radialRenderer, sweepRenderer;
-    auto ringverts = geo.generateRings(5);
-    ringRenderer.upload(ringverts);
-    auto radialverts = geo.generateRadials(12);
-    radialRenderer.upload(radialverts);
-    double lastTime = glfwGetTime();
+    VBO VBO1(vertices, sizeof(vertices));
+    EBO EBO1(indices, sizeof(indices));
+
+    VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 8 * sizeof(float), (void *)0);
+    VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+    VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+
+    VAO1.Unbind();
+    VBO1.Unbind();
+    EBO1.Unbind();
+
+    // load and create a texture
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+
+    fs::path imagepath = fs::current_path().fs::path::parent_path().fs::path::parent_path() / "resources" / "container.jpg";
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load(imagepath.string().c_str(), &width, &height, &nrChannels, 0);
+
+    std::cout << "Looking for image at: " << imagepath << std::endl;
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(data);
 
     while (!glfwWindowShouldClose(window))
     {
-        // input
-        // -----
         processInput(window);
-
-        // render
-        // ------
         glClear(GL_COLOR_BUFFER_BIT);
 
         // draw
         shaderPositionAndColor.use();
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        double now = glfwGetTime();
-        double dt = now - lastTime;
-        lastTime = now;
-        auto sweepVerts = geo.generateSweep(dt);
-        sweepRenderer.upload(sweepVerts);
-
-        ringRenderer.render(GL_LINE_STRIP);
-        radialRenderer.render(GL_LINES);
-        sweepRenderer.render(GL_TRIANGLE_FAN);
+        // shaderPositionAndColor.setFloat("xOffset", -0.5);
+        // shaderPositionAndColor.setFloat("yOffset", -0.5);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        VAO1.Bind();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
@@ -167,8 +135,10 @@ int main()
     }
 
     // de-allocate all resources
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    VAO1.Delete();
+    VBO1.Delete();
+    EBO1.Delete();
+    shaderPositionAndColor.Delete();
 
     glfwTerminate();
     return 0;

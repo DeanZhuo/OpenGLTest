@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(OpenGLTest)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 if(MINGW)
 
@@ -33,9 +33,9 @@ if (MINGW)
   include_directories(${OPENGL_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${RADAR_INCLUDE_DIRS})
 endif()
 
-add_executable(OpenGLTest
-    src/main.cpp
-)
+file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+
+add_executable(OpenGLTest ${SRC_FILES})
 
 target_include_directories(OpenGLTest PRIVATE
     ${CMAKE_SOURCE_DIR}/include
