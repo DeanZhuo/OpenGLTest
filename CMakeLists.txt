@@ -30,7 +30,7 @@ find_package(glfw3 3.4 REQUIRED)
 find_package(radar 1.0 REQUIRED)
 
 if (MINGW)
-  include_directories(${OPENGL_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${RADAR_INCLUDE_DIRS})
+  include_directories(${OPENGL_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
 endif()
 
 file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
@@ -39,6 +39,8 @@ add_executable(OpenGLTest ${SRC_FILES})
 
 target_include_directories(OpenGLTest PRIVATE
     ${CMAKE_SOURCE_DIR}/include
+    "C:/Users/Bee/Documents/CCPP/dev/libs/glm-1.0.1/include"
+
 )
 
 target_link_libraries(OpenGLTest

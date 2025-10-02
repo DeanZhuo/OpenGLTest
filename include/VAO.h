@@ -11,7 +11,7 @@ public:
     void Bind();
     void Unbind();
     void Delete();
-    void LinkAttrib(VBO &VBO, unsigned int index, unsigned int size, unsigned int type, std::ptrdiff_t stride, void *pointer);
+    void LinkAttrib(VBO &VBO, GLuint index, GLuint size, GLenum type, GLsizeiptr stride, void *pointer);
 };
 
 #endif

@@ -1,7 +1,7 @@
 #include "EBO.h"
 #include <GL/glew.h>
 
-EBO::EBO(unsigned int *indices, std::ptrdiff_t size)
+EBO::EBO(unsigned int *indices, GLsizeiptr size)
 {
     glGenBuffers(1, &ID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID);

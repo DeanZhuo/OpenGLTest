@@ -1,7 +1,7 @@
 #include "VBO.h"
 #include <GL/glew.h>
 
-VBO::VBO(float *vertices, std::ptrdiff_t size)
+VBO::VBO(float *vertices, GLsizeiptr size)
 {
     glGenBuffers(1, &ID);
     glBindBuffer(GL_ARRAY_BUFFER, ID);

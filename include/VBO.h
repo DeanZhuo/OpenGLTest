@@ -1,12 +1,12 @@
 #ifndef VBO_H
 #define VBO_H
-#include <cstddef> // for std::ptrdiff_t
+#include <GL/glew.h>
 
 class VBO
 {
 public:
     unsigned int ID;
-    VBO(float *vertices, std::ptrdiff_t size);
+    VBO(float *vertices, GLsizeiptr size);
     void Bind();
     void Unbind();
     void Delete();
