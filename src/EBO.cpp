@@ -1,5 +1,4 @@
 #include "EBO.h"
-#include <GL/glew.h>
 
 EBO::EBO(unsigned int *indices, GLsizeiptr size)
 {

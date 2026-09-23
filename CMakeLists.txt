@@ -49,6 +49,7 @@ target_link_libraries(OpenGLTest
   GLEW::GLEW
   radar::radar_core
   radar::radar_opengl
+  radar::radar_packet
   glfw
 )
 

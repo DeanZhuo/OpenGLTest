@@ -1,5 +1,4 @@
 #include "VAO.h"
-#include <GL/glew.h>
 
 VAO::VAO()
 {

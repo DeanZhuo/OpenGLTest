@@ -11,6 +11,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "RadarGeometry.h"
+#include "RadarRenderer.h"
+
 namespace fs = std::filesystem;
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
@@ -64,12 +67,13 @@ unsigned int indices[] = {
     2, 2, 3  // second triangle ...
 };
 
-float mixValue = 0.2f;
+float mixValue = 0.0f;
 const unsigned int scr_width = 800;
 const unsigned int scr_height = 600;
 
 int main()
 {
+#pragma region init
     if (!glfwInit())
         return 1;
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -120,7 +124,9 @@ int main()
             },
             nullptr);
     }
+#pragma endregion
 
+#pragma region gl objects
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
     Shader shaderPositionAndColor("../../shaders/positionColor.vert", "../../shaders/positionColor.frag");
@@ -142,9 +148,9 @@ int main()
     // load and create a texture
     std::string imagepath = (fs::current_path().fs::path::parent_path().fs::path::parent_path()).string() + "\\resources\\";
     std::string containerPath = "container.jpg";
-    std::string facePath = "awesomeface.png";
+    // std::string facePath = "awesomeface.png";
 
-    unsigned int texture1, texture2;
+    unsigned int texture1; //, texture2;
     // texture 1
     glGenTextures(1, &texture1);
     glBindTexture(GL_TEXTURE_2D, texture1);
@@ -170,6 +176,7 @@ int main()
     }
     stbi_image_free(data);
 
+    /*
     // texture 2
     glGenTextures(1, &texture2);
     glBindTexture(GL_TEXTURE_2D, texture2);
@@ -192,10 +199,11 @@ int main()
         std::cout << "Failed to load texture" << std::endl;
     }
     stbi_image_free(data);
+    */
 
     shaderPositionAndColor.use();
     shaderPositionAndColor.setInt("texture1", 0);
-    shaderPositionAndColor.setInt("texture2", 1);
+    // shaderPositionAndColor.setInt("texture2", 1);
 
     glm::mat4 view = glm::mat4(1.0f);
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
@@ -204,17 +212,33 @@ int main()
     glm::mat4 projection;
     projection = glm::perspective(glm::radians(45.0f), (float)scr_width / (float)scr_height, 0.1f, 100.0f);
     shaderPositionAndColor.setMat4("projection", projection);
+#pragma endregion
+
+    std::cout << "Finished init gl objects" << std::endl;
+
+    RadarGeometry geo(0.0f, 0.0f, 60.0f);
+    RadarRenderer ringRenderer, sweepRenderer, videoRenderer;
+    /*
+    ringRenderer.initRenderer();
+    sweepRenderer.initRenderer();
+    videoRenderer.initTextureRenderer();
+    ringRenderer.upload(geo.generateRings(5));
+    float angle = 0.0f;
+
+    std::cout << "Finished init radar objects" << std::endl;
+    */
 
     while (!glfwWindowShouldClose(window))
     {
+#pragma region render gl
         processInput(window);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // draw
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
+        // glActiveTexture(GL_TEXTURE1);
+        // glBindTexture(GL_TEXTURE_2D, texture2);
 
         shaderPositionAndColor.setFloat("mixValue", mixValue);
 
@@ -225,6 +249,17 @@ int main()
         VAO1.Bind();
         // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glDrawArrays(GL_TRIANGLES, 0, 36);
+#pragma endregion
+
+        /*
+        ringRenderer.render(GL_LINES);
+        sweepRenderer.upload(geo.generateStoppedSweep(angle));
+        sweepRenderer.render(GL_TRIANGLE_FAN);
+
+        angle += 0.01f;
+        if (angle > 360.0f)
+            angle = 0.0f;
+        */
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -249,6 +284,7 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
+    /*
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
     {
         mixValue += 0.0001f;
@@ -263,4 +299,5 @@ void processInput(GLFWwindow *window)
             mixValue = 0.0f;
         std::cout << "mix value: " << mixValue << std::endl;
     }
+    */
 }

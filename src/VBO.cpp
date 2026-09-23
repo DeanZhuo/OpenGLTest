@@ -1,5 +1,4 @@
 #include "VBO.h"
-#include <GL/glew.h>
 
 VBO::VBO(float *vertices, GLsizeiptr size)
 {
